@@ -1,15 +1,10 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { z } from 'zod';
 
-export const CreateDocSchema = z.object({
-  title: z.string().min(1).describe('The title of the new Google Document.'),
-  content: z
-    .string()
-    .describe('The plain-text content to insert into the document body.'),
-});
-
-export type CreateDocInput = z.infer<typeof CreateDocSchema>;
+export interface CreateDocInput {
+  title: string;
+  content: string;
+}
 
 interface CreatedDoc {
   documentId: string;

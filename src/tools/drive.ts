@@ -1,27 +1,10 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { z } from 'zod';
 
-export const SearchDriveSchema = z.object({
-  query: z
-    .string()
-    .min(1)
-    .describe(
-      'Drive search query string. Supports Drive query syntax, e.g. ' +
-      '"name contains \'budget\'", "mimeType=\'application/vnd.google-apps.document\'", ' +
-      '"modifiedTime > \'2024-01-01\'"'
-    ),
-  maxResults: z
-    .number()
-    .int()
-    .min(1)
-    .max(1000)
-    .optional()
-    .default(10)
-    .describe('Maximum number of files to return (default 10)'),
-});
-
-export type SearchDriveInput = z.infer<typeof SearchDriveSchema>;
+export interface SearchDriveInput {
+  query: string;
+  maxResults?: number;
+}
 
 interface DriveFile {
   id: string;
@@ -42,7 +25,7 @@ export async function searchDrive(
 
   const response = await drive.files.list({
     q: input.query,
-    pageSize: input.maxResults,
+    pageSize: input.maxResults ?? 10,
     fields:
       'files(id, name, mimeType, modifiedTime, size, webViewLink, owners, parents)',
     orderBy: 'modifiedTime desc',

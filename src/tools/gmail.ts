@@ -1,25 +1,10 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { z } from 'zod';
 
-export const ListGmailMessagesSchema = z.object({
-  maxResults: z
-    .number()
-    .int()
-    .min(1)
-    .max(500)
-    .optional()
-    .default(10)
-    .describe('Maximum number of messages to return (1-500, default 10)'),
-  q: z
-    .string()
-    .optional()
-    .describe(
-      'Gmail search query (e.g. "from:alice@example.com", "subject:meeting", "is:unread")'
-    ),
-});
-
-export type ListGmailMessagesInput = z.infer<typeof ListGmailMessagesSchema>;
+export interface ListGmailMessagesInput {
+  maxResults?: number;
+  q?: string;
+}
 
 interface MessageSummary {
   id: string;
@@ -31,8 +16,11 @@ interface MessageSummary {
   labelIds: string[];
 }
 
-function extractHeader(headers: { name: string; value: string }[], name: string): string {
-  return headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
+function extractHeader(
+  headers: Array<{ name?: string | null; value?: string | null }>,
+  name: string
+): string {
+  return headers.find((h) => (h.name ?? '').toLowerCase() === name.toLowerCase())?.value ?? '';
 }
 
 export async function listGmailMessages(
@@ -41,10 +29,9 @@ export async function listGmailMessages(
 ): Promise<MessageSummary[]> {
   const gmail = google.gmail({ version: 'v1', auth });
 
-  // Fetch message list
   const listResponse = await gmail.users.messages.list({
     userId: 'me',
-    maxResults: input.maxResults,
+    maxResults: input.maxResults ?? 10,
     q: input.q,
   });
 
@@ -53,7 +40,7 @@ export async function listGmailMessages(
     return [];
   }
 
-  // Fetch details for each message in parallel (metadata format for efficiency)
+  // Fetch metadata for each message in parallel
   const details = await Promise.all(
     messages.map((msg) =>
       gmail.users.messages.get({
