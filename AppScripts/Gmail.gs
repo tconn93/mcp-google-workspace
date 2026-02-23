@@ -17,7 +17,7 @@ function gmailSearch(params) {
     const firstMsg = thread.getMessages()[0];
     return {
       threadId:   thread.getId(),
-      snippet:    thread.getLastMessageSubject(),
+      snippet:    thread.getFirstMessageSubject(),
       subject:    firstMsg.getSubject(),
       from:       firstMsg.getFrom(),
       date:       firstMsg.getDate().toISOString(),
